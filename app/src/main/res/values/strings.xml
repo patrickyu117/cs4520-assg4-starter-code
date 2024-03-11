@@ -1,3 +1,8 @@
 <resources>
   <string name="app_name">Assignment4</string>
+  <string name="login_button_text">Login</string>
+  <string name="username_hint">Username</string>
+  <string name="password_hint">Password</string>
+  <string name="image_of_product">Image of product</string>
+  <string name="no_products">No Products Available</string>
 </resources>
