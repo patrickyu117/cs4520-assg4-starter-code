@@ -44,8 +44,6 @@ class LoginFragment : Fragment() {
                 Toast.makeText(requireContext(), "Login failed", Toast.LENGTH_SHORT).show()
             }
         }
-
-
     }
 
 }

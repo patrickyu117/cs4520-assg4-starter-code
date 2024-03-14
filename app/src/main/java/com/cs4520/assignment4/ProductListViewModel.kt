@@ -6,9 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 
+// ViewModel class for the product list
 class ProductListViewModel : ViewModel() {
 
-    private lateinit var repository: ProductRepository
+    private lateinit var repo: ProductRepository
 
     private val _products = MutableLiveData<List<Product>>()
     val products: LiveData<List<Product>> get() = _products
@@ -19,26 +20,34 @@ class ProductListViewModel : ViewModel() {
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> get() = _error
 
-    private val _noProductsAvailable = MutableLiveData<Boolean>()
-    val noProductsAvailable: LiveData<Boolean> get() = _noProductsAvailable
+    private val _noProducts = MutableLiveData<Boolean>()
+    val noProducts: LiveData<Boolean> get() = _noProducts
 
-    fun init(repository: ProductRepository) {
-        this.repository = repository
+    // Initialize the repository
+    fun initialize(repository: ProductRepository) {
+        this.repo = repository
     }
 
+    // Retrieves the product list from the repository in a coroutine
     fun fetchProducts() {
         viewModelScope.launch {
+            // Start loading and set the loading value to true
             _loading.value = true
             try {
-                val productList = repository.getProducts()
-                if (productList.isNotEmpty()) {
+                // Try fetching the products from the repo
+                val productList = repo.getProducts()
+                // Make sure the product list is not null or empty
+                if (!productList.isNullOrEmpty()) {
                     _products.value = productList
                 } else {
-                    _noProductsAvailable.value = true
+                    // If the product list is empty, set the no products value to true
+                    _noProducts.value = true
                 }
             } catch (e: Exception) {
-                _error.value = "Error fetching data: ${e.message}"
+                // Catch any error exception and set it to the error value
+                _error.value = e.message
             } finally {
+                // After loading successfully or unsuccessfully, set the loading value to false
                 _loading.value = false
 
             }
