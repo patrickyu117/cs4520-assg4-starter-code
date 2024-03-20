@@ -7,34 +7,39 @@ class ProductRepository(private val apiService: ApiService, private val productD
     suspend fun getProducts(): List<Product> {
         try {
             // Call the API to get the products directly
-            val products = apiService.getProducts()
+            val productResponse = apiService.getProducts(3)
 
-            // If the JSON fetched is not a product i.e. it is null or has null fields
-            // we know this is the instance where the API call returns {message: "Random error occurred"}
-            if (products.firstOrNull()?.name == null) {
-                // Throw an exception to pass on the error mesage
+            if (productResponse.isSuccessful) {
+                val products = productResponse.body()
+                if (products is List<Product>) {
+                    // Filter out duplicate products
+                    val distinctProducts = products.distinctBy { it.name }
+
+                    // Filter out invalid products
+                    val validProducts = distinctProducts.filter { it.isValidProduct() }
+
+                    // Insert products into the local room database
+                    productDao.insertAll(validProducts)
+
+                    // Return the list of products
+                    return products
+                } else {
+                    throw NoProductsException("Random error occurred")
+                }
+            } else {
                 throw NoProductsException("Random error occurred")
             }
 
-            // Filter out duplicate products
-            val distinctProducts = products.distinctBy { it.name }
-
-            // Filter out invalid products
-            val validProducts = distinctProducts.filter { it.isValidProduct() }
-
-            // Insert products into the local room database
-            productDao.insertAll(validProducts)
-
-            // Return the list of products
-            return products
         } catch (e: Exception) {
             // Check the error message to see if it because the API call returned something that is
             // not a product i.e. the error message. Throws an exception if we know the error is not from
             // being offline
-            if (e.message == "Random error occurred" || e.message == "HTTP 403" || e.message == "HTTP 404") {
+            if (e.message == "Random error occurred") {
+                println("error1: " + e.message)
                 throw NoProductsException("Random error occurred")
             } else {
                 // Return the local database once we know the error was because the phone is offline
+                println("error2: " + e.message)
                 return productDao.getAllProducts()
             }
         }
